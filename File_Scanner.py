@@ -3,9 +3,15 @@ import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
 import subprocess
+import platform
 
 # Define the directory to search for .exe files (entire C drive)
-C_DRIVE = os.path.expanduser("~/Applications/Sikarugir/MasterWrapper.app/Contents/SharedSupport/prefix/drive_c")
+if platform.system() == "Windows":
+    # When running on Windows, use the actual C: drive
+    C_DRIVE = "C:\\"
+else:
+    # When running on macOS, use the Sikarugir path
+    C_DRIVE = os.path.expanduser("~/Applications/Sikarugir/MasterWrapper.app/Contents/SharedSupport/prefix/drive_c")
 
 # Function to scan for .exe files
 def scan_for_exes(directory):
