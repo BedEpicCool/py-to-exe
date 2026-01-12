@@ -33,7 +33,7 @@ def scan_for_exes(directory):
 # Function to launch selected .exe file
 def launch_app(exe_path):
     try:
-        subprocess.run([exe_path], check=True)
+        subprocess.Popen([exe_path])
     except Exception as e:
         messagebox.showerror("Error", f"Failed to launch {exe_path}:\n{str(e)}")
 
