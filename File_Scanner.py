@@ -4,6 +4,7 @@ from tkinter import simpledialog
 from tkinter import messagebox
 import subprocess
 import platform
+import sys
 
 # Define the directory to search for .exe files (entire C drive)
 if platform.system() == "Windows":
@@ -33,7 +34,12 @@ def scan_for_exes(directory):
 # Function to launch selected .exe file
 def launch_app(exe_path):
     try:
-        subprocess.Popen([exe_path])
+        if sys.platform == "win32":
+            # On Windows, use shell=True to properly handle child processes
+            subprocess.Popen([exe_path], shell=True)
+        else:
+            # On Unix/macOS (including Wine), use start_new_session to detach from parent
+            subprocess.Popen([exe_path], start_new_session=True)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to launch {exe_path}:\n{str(e)}")
 
