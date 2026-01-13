@@ -14,14 +14,36 @@ class RoundedEntry(tk.Frame):
                                highlightthickness=0, relief=tk.FLAT, bd=0)
         self.canvas.pack()
         
-        # Draw rounded rectangle
-        self.canvas.create_rounded_rectangle(0, 0, width, height, radius=corner_radius, 
-                                            fill=bg_color, outline="#4285f4", width=2)
+        # Draw rounded rectangle with arcs and lines
+        self._draw_rounded_rectangle(self.canvas, 0, 0, width, height, corner_radius, bg_color)
         
         # Create entry widget
         self.entry = tk.Entry(self.canvas, font=("Arial", 11), bg=bg_color, fg=text_color,
                              insertbackground="#4285f4", relief=tk.FLAT, bd=0, **kwargs)
         self.canvas.create_window(width//2, height//2, window=self.entry, width=width-20)
+    
+    def _draw_rounded_rectangle(self, canvas, x, y, width, height, radius, fill_color):
+        # Draw corners with arcs
+        canvas.create_arc(x, y, x+radius*2, y+radius*2, start=90, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+width-radius*2, y+radius*2, x+width, y, start=0, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+width-radius*2, y+height-radius*2, x+width, y+height, start=270, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+radius*2, y+height-radius*2, x+radius*2, y+height, start=180, extent=90, fill=fill_color, outline=fill_color)
+        
+        # Draw connecting lines
+        canvas.create_rectangle(x+radius, y, x+width-radius, y+height, fill=fill_color, outline=fill_color)
+        canvas.create_rectangle(x, y+radius, x+width, y+height-radius, fill=fill_color, outline=fill_color)
+        
+        # Draw border with arcs
+        canvas.create_arc(x, y, x+radius*2, y+radius*2, start=90, extent=90, outline="#4285f4", width=2)
+        canvas.create_arc(x+width-radius*2, y+radius*2, x+width, y, start=0, extent=90, outline="#4285f4", width=2)
+        canvas.create_arc(x+width-radius*2, y+height-radius*2, x+width, y+height, start=270, extent=90, outline="#4285f4", width=2)
+        canvas.create_arc(x+radius*2, y+height-radius*2, x+radius*2, y+height, start=180, extent=90, outline="#4285f4", width=2)
+        
+        # Draw border lines
+        canvas.create_line(x+radius, y, x+width-radius, y, fill="#4285f4", width=2)
+        canvas.create_line(x+radius, y+height, x+width-radius, y+height, fill="#4285f4", width=2)
+        canvas.create_line(x, y+radius, x, y+height-radius, fill="#4285f4", width=2)
+        canvas.create_line(x+width, y+radius, x+width, y+height-radius, fill="#4285f4", width=2)
     
     def get(self):
         return self.entry.get()
@@ -32,33 +54,90 @@ class RoundedEntry(tk.Frame):
     def insert(self, *args):
         return self.entry.insert(*args)
 
-# Monkey patch Canvas to support rounded rectangles
-def create_rounded_rectangle(self, x1, y1, x2, y2, radius=20, **kwargs):
-    points = [
-        x1+radius, y1,
-        x1+radius, y1,
-        x2-radius, y1,
-        x2-radius, y1,
-        x2, y1,
-        x2, y1+radius,
-        x2, y1+radius,
-        x2, y2-radius,
-        x2, y2-radius,
-        x2, y2,
-        x2-radius, y2,
-        x2-radius, y2,
-        x1+radius, y2,
-        x1+radius, y2,
-        x1, y2,
-        x1, y2-radius,
-        x1, y2-radius,
-        x1, y1+radius,
-        x1, y1+radius,
-        x1, y1
-    ]
-    return self.create_polygon(points, **kwargs, smooth=True)
+# Custom rounded button widget using Canvas
+class RoundedButton(tk.Frame):
+    def __init__(self, parent, text="", command=None, width=200, height=50, 
+                 bg_color="#4285f4", text_color="#ffffff", corner_radius=10, **kwargs):
+        super().__init__(parent, bg=parent["bg"])
+        
+        self.canvas = tk.Canvas(self, width=width, height=height, bg=parent["bg"], 
+                               highlightthickness=0, relief=tk.FLAT, bd=0, cursor="hand2")
+        self.canvas.pack()
+        
+        # Draw rounded rectangle
+        self._draw_rounded_rectangle(self.canvas, 0, 0, width, height, corner_radius, bg_color)
+        
+        # Create button widget
+        self.button = tk.Button(self.canvas, text=text, command=command, 
+                               font=("Arial", 12, "bold"), bg=bg_color, fg=text_color,
+                               relief=tk.FLAT, bd=0, activebackground=bg_color, 
+                               activeforeground=text_color, **kwargs)
+        self.canvas.create_window(width//2, height//2, window=self.button, width=width-20)
+    
+    def _draw_rounded_rectangle(self, canvas, x, y, width, height, radius, fill_color):
+        # Draw corners with arcs
+        canvas.create_arc(x, y, x+radius*2, y+radius*2, start=90, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+width-radius*2, y+radius*2, x+width, y, start=0, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+width-radius*2, y+height-radius*2, x+width, y+height, start=270, extent=90, fill=fill_color, outline=fill_color)
+        canvas.create_arc(x+radius*2, y+height-radius*2, x+radius*2, y+height, start=180, extent=90, fill=fill_color, outline=fill_color)
+        
+        # Draw connecting rectangles
+        canvas.create_rectangle(x+radius, y, x+width-radius, y+height, fill=fill_color, outline=fill_color)
+        canvas.create_rectangle(x, y+radius, x+width, y+height-radius, fill=fill_color, outline=fill_color)
 
-tk.Canvas.create_rounded_rectangle = create_rounded_rectangle
+# Custom rounded listbox widget using Canvas
+class RoundedListbox(tk.Frame):
+    def __init__(self, parent, width=500, height=400, bg_color="#1a1f3a", 
+                 text_color="#ffffff", corner_radius=10, **kwargs):
+        super().__init__(parent, bg=parent["bg"])
+        
+        self.canvas = tk.Canvas(self, width=width, height=height, bg=parent["bg"], 
+                               highlightthickness=0, relief=tk.FLAT, bd=0)
+        self.canvas.pack()
+        
+        # Draw rounded rectangle background
+        self._draw_rounded_rectangle(self.canvas, 0, 0, width, height, corner_radius, bg_color)
+        
+        # Create listbox widget with padding
+        padding = 8
+        self.listbox = tk.Listbox(self.canvas, font=("Arial", 12), 
+                                 bg=bg_color, fg=text_color, selectbackground="#4285f4", 
+                                 selectforeground=text_color, borderwidth=0, 
+                                 highlightthickness=0, activestyle='dotbox', **kwargs)
+        self.canvas.create_window(width//2, height//2, window=self.listbox, 
+                                 width=width-padding*2, height=height-padding*2)
+    
+    def _draw_rounded_rectangle(self, canvas, x, y, width, height, radius, fill_color):
+        # Draw corners with arcs
+        canvas.create_arc(x, y, x+radius*2, y+radius*2, start=90, extent=90, fill=fill_color, outline="#4285f4", width=2)
+        canvas.create_arc(x+width-radius*2, y+radius*2, x+width, y, start=0, extent=90, fill=fill_color, outline="#4285f4", width=2)
+        canvas.create_arc(x+width-radius*2, y+height-radius*2, x+width, y+height, start=270, extent=90, fill=fill_color, outline="#4285f4", width=2)
+        canvas.create_arc(x+radius*2, y+height-radius*2, x+radius*2, y+height, start=180, extent=90, fill=fill_color, outline="#4285f4", width=2)
+        
+        # Draw connecting rectangles
+        canvas.create_rectangle(x+radius, y, x+width-radius, y+height, fill=fill_color, outline=fill_color)
+        canvas.create_rectangle(x, y+radius, x+width, y+height-radius, fill=fill_color, outline=fill_color)
+        
+        # Draw border lines
+        canvas.create_line(x+radius, y, x+width-radius, y, fill="#4285f4", width=2)
+        canvas.create_line(x+radius, y+height, x+width-radius, y+height, fill="#4285f4", width=2)
+        canvas.create_line(x, y+radius, x, y+height-radius, fill="#4285f4", width=2)
+        canvas.create_line(x+width, y+radius, x+width, y+height-radius, fill="#4285f4", width=2)
+    
+    def curselection(self):
+        return self.listbox.curselection()
+    
+    def get(self, index):
+        return self.listbox.get(index)
+    
+    def insert(self, index, *items):
+        return self.listbox.insert(index, *items)
+    
+    def delete(self, first, last=None):
+        return self.listbox.delete(first, last)
+    
+    def bind(self, sequence, func, add=None):
+        return self.listbox.bind(sequence, func, add)
 
 # Define the directory to search for .exe files (entire C drive)
 if platform.system() == "Windows":
@@ -149,12 +228,10 @@ list_frame.pack(padx=25, pady=(0, 20), fill=tk.BOTH, expand=True)
 scrollbar = tk.Scrollbar(list_frame, bg=CARD_BG, troughcolor=BG_COLOR, activebackground=PRIMARY_COLOR)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-listbox = tk.Listbox(list_frame, yscrollcommand=scrollbar.set, font=("Arial", 12), 
-                     bg=CARD_BG, fg=TEXT_COLOR, selectbackground=PRIMARY_COLOR, 
-                     selectforeground=TEXT_COLOR, borderwidth=0, highlightthickness=2,
-                     highlightcolor=SECONDARY_COLOR, highlightbackground=CARD_BG, activestyle='dotbox')
+listbox = RoundedListbox(list_frame, width=600, height=350, bg_color=CARD_BG, 
+                        text_color=TEXT_COLOR, corner_radius=15, yscrollcommand=scrollbar.set)
 listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-scrollbar.config(command=listbox.yview)
+scrollbar.config(command=listbox.listbox.yview)
 
 for app_name in sorted_apps:
     listbox.insert(tk.END, app_name)
@@ -186,16 +263,14 @@ listbox.bind("<Double-1>", on_select)
 button_frame = tk.Frame(root, bg=BG_COLOR)
 button_frame.pack(padx=25, pady=(0, 25), fill=tk.X)
 
-launch_button = tk.Button(button_frame, text="▶  Launch App", command=on_select, 
-                          font=("Arial", 12, "bold"), bg=PRIMARY_COLOR, fg=TEXT_COLOR, 
-                          padx=30, pady=12, relief=tk.FLAT, cursor="hand2",
-                          activebackground=HOVER_COLOR, activeforeground=TEXT_COLOR)
+launch_button = RoundedButton(button_frame, text="▶  Launch App", command=on_select, 
+                              width=280, height=50, bg_color=PRIMARY_COLOR, 
+                              text_color=TEXT_COLOR, corner_radius=12)
 launch_button.pack(side=tk.LEFT, padx=(0, 12), fill=tk.X, expand=True)
 
-refresh_button = tk.Button(button_frame, text="🔄  Refresh", 
-                           font=("Arial", 12, "bold"), bg=SECONDARY_COLOR, fg=TEXT_COLOR, 
-                           padx=30, pady=12, relief=tk.FLAT, cursor="hand2",
-                           activebackground=ACCENT_COLOR, activeforeground=TEXT_COLOR)
+refresh_button = RoundedButton(button_frame, text="🔄  Refresh",
+                               width=280, height=50, bg_color=SECONDARY_COLOR, 
+                               text_color=TEXT_COLOR, corner_radius=12)
 refresh_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
 # Start the Tkinter event loop
